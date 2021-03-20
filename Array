@@ -1,0 +1,120 @@
+#include <iostream>
+#include <fstream>
+#include <time.h>
+#include "dictpara.h"
+#include "array.h"
+#include <string>
+
+
+typedef Array<DictPara> Container;
+class fileWork{
+	std::ifstream inputFile;
+	std::ofstream outputFile;
+	Container &findArray;
+public:
+	fileWork(Container &X):findArray(X) {
+		char in[128];
+		char out[128];
+		std::cout << "Enter input file: ";
+		std::cin.getline(in,128);
+		std::cout << "Enter output file: ";
+		std::cin.getline(out, 128);
+		inputFile.open(in);
+		if (!inputFile) {
+			std::cout <<  "Cant open File :" << in ;
+		}
+		outputFile.open(out);
+		if (!outputFile) {
+			std::cout << "Cant open File :" << out;
+		}
+	}
+	~fileWork() {
+		inputFile.close();
+		outputFile.close();
+	}
+
+	friend void translateFile(fileWork&);
+};
+
+
+void translateFile(fileWork &X) {
+	int cFF = X.inputFile.get();
+	stroka str(0);
+	Container sup;
+	bool h = false;
+		while(cFF != EOF){
+	    bool symbol = ((cFF < 65) || (cFF > 90 && cFF < 97) || (cFF > 122 && cFF < 128) || cFF > 239) && cFF!=45;
+		std::cout << symbol << std::endl;
+		if (symbol) {
+			X.outputFile << char(cFF);
+			h = true;
+			if (sup.size() == 0 && h) {
+				X.outputFile << str;
+				str = stroka(0);
+				sup.clear();
+			}
+			for (int i = 0; i < sup.size() && sup.size()>0 && (h || cFF == -1); i++) {
+				if (sup[i] == DictPara(str, "")) {
+					X.outputFile << sup[i].get_translate();
+					sup.clear();
+					str = stroka(0);
+					h = false;
+				}
+			}
+		}
+		else {
+			str = str + char(cFF);
+			std::cout << str << std::endl;
+			int count = str.size();
+			if (count == 2) {
+				for (int i = 0; i < X.findArray.size(); i++) {
+					if (X.findArray[i].get_word()[0] == str[0]) {
+						sup.push_back(X.findArray[i]);
+					}
+				}
+			}
+			else {
+				auto pos = sup.begin();
+				for (int i = 0; pos != sup.end(); ) {
+					if (sup[i].get_word()[count - 2] != str[count - 2]) {
+						sup.erase(pos);
+					}
+					else {
+						pos++;
+						i++;
+					}
+				}
+			}
+
+		}
+		cFF = X.inputFile.get();
+
+	}
+		
+}
+main(){
+char fname[] = "en_ru.txt";
+	char fname1[] = "en_zh.txt";
+	std::ifstream inFile(fname);
+	std::ifstream inFile1(fname1);
+	if (!inFile) throw stroka("Can not open dictionary ") + fname;
+	DictPara X;
+	Container Dictionary;
+	Container Dictionary1;
+	int counter = 0;
+	long tic = time(NULL);
+	while (inFile.peek() != EOF) {
+		inFile >> X;
+		Dictionary.push_back(X);
+		++counter;
+	}
+	while (inFile1.peek() != EOF) {
+		inFile1 >> X;
+		Dictionary1.push_back(X);
+		++counter;
+	}
+	fileWork file1(Dictionary1);
+	translateFile(file1);
+	fileWork file(Dictionary);
+	translateFile(file);
+}
