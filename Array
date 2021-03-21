@@ -41,24 +41,23 @@ void translateFile(fileWork &X) {
 	int cFF = X.inputFile.get();
 	stroka str(0);
 	Container sup;
-	bool h = false;
 		while(cFF != EOF){
 	    bool symbol = ((cFF < 65) || (cFF > 90 && cFF < 97) || (cFF > 122 && cFF < 128) || cFF > 239) && cFF!=45;
 		std::cout << symbol << std::endl;
 		if (symbol) {
 			X.outputFile << char(cFF);
-			h = true;
-			if (sup.size() == 0 && h) {
+			
+			if (sup.size() == 0) {
 				X.outputFile << str;
 				str = stroka(0);
 				sup.clear();
 			}
-			for (int i = 0; i < sup.size() && sup.size()>0 && (h || cFF == -1); i++) {
+			
+			for (int i = 0; (i < sup.size() && sup.size()>0) || cFF == -1); i++) {
 				if (sup[i] == DictPara(str, "")) {
 					X.outputFile << sup[i].get_translate();
 					sup.clear();
 					str = stroka(0);
-					h = false;
 				}
 			}
 		}
